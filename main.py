@@ -116,8 +116,6 @@ class cosmo_model:
             param: self.getdist_samples.getInlineLatex(param, sigma)
             for param in param_list
         }
-        for param in param_list:
-            print(f"{param_constraints[param]}")
         return param_constraints
 
     def get_chi2(self):
@@ -152,7 +150,7 @@ class cosmo_model:
         chi2_1 = self.get_chi2()
         chi2_2 = alternative_model.get_chi2()
         delta_chi2 = chi2_1 - chi2_2
-        print(rf"$\Delta \chi^2$: {delta_chi2:.3f}")
+        # print(rf"$\Delta \chi^2$: {delta_chi2:.3f}")
         return delta_chi2
 
     # %% MCEvidence
@@ -177,7 +175,7 @@ class cosmo_model:
         evidence1 = self.mcevidence
         evidence2 = alternative_model.mcevidence
         bayes_factor = evidence1 - evidence2
-        print(rf"$\ln\mathcal{{Z}}_\mathrm{{MCE}}$: {bayes_factor:.3f}")
+        # print(rf"$\ln\mathcal{{Z}}_\mathrm{{MCE}}$: {bayes_factor:.3f}")
         return bayes_factor
 
     # %% Learned Harmonic Mean Estimator
@@ -330,9 +328,9 @@ class cosmo_model:
         # Lower error of result mixes E2's lower and E1's upper
         err_lower = np.sqrt(e2_err_lower**2 + e1_err_upper**2)
 
-        print(
-            rf"$\ln\mathcal{{Z}}_\mathrm{{LHME}}$: {bayes_factor:.3f} + {err_upper:.3f} / - {err_lower:.3f}"
-        )
+        # print(
+        #    rf"$\ln\mathcal{{Z}}_\mathrm{{LHME}}$: {bayes_factor:.3f} + {err_upper:.3f} / - {err_lower:.3f}"
+        # )
 
         # Returning a tuple containing the Bayes factor and its asymmetric error bounds
         return bayes_factor, err_lower, err_upper
@@ -345,13 +343,20 @@ class cosmo_model:
         if self.inference is None or self._hm_model is None:
             raise ValueError("Please run get_hm_evidence() or train_model() first.")
 
-        # Calculate the log weights: ln(w_i) = ln(phi_i) - ln(posterior_i)
-        # We use the already-stored model and inference chains.
+        # Evaluate log target density
         log_phi = self._hm_model.predict(self.inference.samples)
+
+        if log_phi.ndim > 1:
+            log_phi = log_phi.flatten()
+
         log_posterior = self.inference.ln_posterior
+        if log_posterior.ndim > 1:
+            log_posterior = log_posterior.flatten()
+
+        # Calculate the log weights
         log_weights = log_phi - log_posterior
 
-        # Convert to linear weights safely by subtracting the max (Standard LogSumExp trick)
+        # Convert to linear weights safely
         weights = np.exp(log_weights - np.max(log_weights))
 
         # Maximum Weight Fraction
@@ -365,24 +370,19 @@ class cosmo_model:
         tail_thres = np.percentile(weights, 80)
         tail_weights = weights[weights > tail_thres]
 
-        k, *_ = genpareto.fit(tail_weights)
+        shifted_tail = tail_weights - tail_thres
+        k, *_ = genpareto.fit(shifted_tail, floc=0)
 
         print("=== Harmonic Estimator Diagnostics ===")
         print(f"Max Weight Fraction: {max_weight_frac:.4f} (Should be < 0.01)")
         print(f"Fractional ESS:      {fractional_ess:.4f} (Higher is better)")
-        print(f"Pareto-k Diagnostic: {k:.4f}")
+        print(f"Pareto-k Diagnostic: {k:.4f} (Less than 0.7 required)")
 
         if k > 0.7:
-            print(
-                "WARNING: Pareto-k > 0.7. The flow is NOT contained. Evidence is unreliable."
-            )
+            print("Pareto-k > 0.7. Evidence is unreliable.")
         elif k < 0.5:
-            print(
-                "SUCCESS: Pareto-k < 0.5. The flow is strictly contained. Evidence is reliable."
-            )
+            print("Pareto-k < 0.5. The Evidence is likely to be reliable.")
         else:
-            print(
-                "NOTICE: 0.5 < Pareto-k < 0.7. Estimate is okay, but variance is high."
-            )
+            print("0.5 < Pareto-k < 0.7. May wish to adjust temperature and epochs.")
 
         return k, fractional_ess

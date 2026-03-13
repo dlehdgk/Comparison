@@ -23,6 +23,7 @@ import numpy as np
 import logging
 import argparse
 import time
+import os
 from .MCEvidence import get_prior_volume, MCEvidence
 
 
@@ -82,10 +83,10 @@ def match_CosmoMC_chains(root, params, verbose=False):
     keep_params = ["weight", "loglike"] + _params
 
     if os.path.isfile(root + ".1.txt"):
-        chain_1 = pd.read_csv(root + ".1.txt", sep="\s+")
+        chain_1 = pd.read_csv(root + ".1.txt", sep=r"\s+")
         chain_1 = pd.read_csv(
             root + ".1.txt",
-            sep="\s+",
+            sep=r"\s+",
             header=None,
             skiprows=1,
             names=chain_1.keys()[1 : len(chain_1.keys())],
@@ -99,10 +100,10 @@ def match_CosmoMC_chains(root, params, verbose=False):
         n_chains += 1
 
     if os.path.isfile(root + ".2.txt"):
-        chain_2 = pd.read_csv(root + ".2.txt", sep="\s+")
+        chain_2 = pd.read_csv(root + ".2.txt", sep=r"\s+")
         chain_2 = pd.read_csv(
             root + ".2.txt",
-            sep="\s+",
+            sep=r"\s+",
             header=None,
             skiprows=1,
             names=chain_2.keys()[1 : len(chain_2.keys())],
@@ -116,10 +117,10 @@ def match_CosmoMC_chains(root, params, verbose=False):
         n_chains += 1
 
     if os.path.isfile(root + ".3.txt"):
-        chain_3 = pd.read_csv(root + ".3.txt", sep="\s+")
+        chain_3 = pd.read_csv(root + ".3.txt", sep=r"\s+")
         chain_3 = pd.read_csv(
             root + ".3.txt",
-            sep="\s+",
+            sep=r"\s+",
             header=None,
             skiprows=1,
             names=chain_3.keys()[1 : len(chain_3.keys())],
@@ -133,10 +134,10 @@ def match_CosmoMC_chains(root, params, verbose=False):
         n_chains += 1
 
     if os.path.isfile(root + ".4.txt"):
-        chain_4 = pd.read_csv(root + ".4.txt", sep="\s+")
+        chain_4 = pd.read_csv(root + ".4.txt", sep=r"\s+")
         chain_4 = pd.read_csv(
             root + ".4.txt",
-            sep="\s+",
+            sep=r"\s+",
             header=None,
             skiprows=1,
             names=chain_4.keys()[1 : len(chain_4.keys())],
@@ -150,10 +151,10 @@ def match_CosmoMC_chains(root, params, verbose=False):
         n_chains += 1
 
     if os.path.isfile(root + ".5.txt"):
-        chain_5 = pd.read_csv(root + ".5.txt", sep="\s+")
+        chain_5 = pd.read_csv(root + ".5.txt", sep=r"\s+")
         chain_5 = pd.read_csv(
             root + ".5.txt",
-            sep="\s+",
+            sep=r"\s+",
             header=None,
             skiprows=1,
             names=chain_5.keys()[1 : len(chain_5.keys())],
